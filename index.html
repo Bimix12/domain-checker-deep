@@ -3,34 +3,585 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Domain Availability Checker</title>
+    <title>GoDaddy Domain Checker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .container { display: flex; flex-direction: column; gap: 20px; }
-        textarea { width: 100%; height: 150px; padding: 10px; }
-        button { padding: 10px 20px; background: #0070f3; color: white; border: none; cursor: pointer; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        .available { color: green; }
-        .taken { color: red; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 20px;
+            color: white;
+        }
+        
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        label {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1a2a6c;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #1a2a6c;
+            box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.2);
+        }
+        
+        .tlds-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .tld-option {
+            background: #f0f5ff;
+            border: 2px solid #c5d4ff;
+            border-radius: 30px;
+            padding: 8px 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tld-option.selected {
+            background: #1a2a6c;
+            color: white;
+            border-color: #1a2a6c;
+        }
+        
+        .tld-option i {
+            font-size: 0.9rem;
+        }
+        
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: linear-gradient(to right, #1a2a6c, #4a5fc1);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(26, 42, 108, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(26, 42, 108, 0.6);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        button:disabled {
+            background: #a0a0a0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .results-section {
+            display: none;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .results-header h2 {
+            color: #1a2a6c;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            font-weight: 500;
+        }
+        
+        .stat-box {
+            background: #f0f5ff;
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .domain-card {
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .domain-card.available {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.05);
+        }
+        
+        .domain-card.taken {
+            border-color: #F44336;
+            background: rgba(244, 67, 54, 0.05);
+        }
+        
+        .domain-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .domain-status {
+            font-weight: 500;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .available .domain-status {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .taken .domain-status {
+            background: #F44336;
+            color: white;
+        }
+        
+        .domain-info {
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: #555;
+        }
+        
+        .domain-info div {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .domain-info span:first-child {
+            font-weight: 500;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #1a2a6c;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #ffebee;
+            border-left: 4px solid #F44336;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Domain Availability Checker</h1>
-        <textarea id="domains" placeholder="Enter domains (one per line)&#10;example:&#10;google&#10;facebook&#10;amazon"></textarea>
+        <header>
+            <h1>Domain Availability Checker</h1>
+            <p>Check domain availability across multiple TLDs using GoDaddy API</p>
+        </header>
         
-        <div>
-            <label>TLDs to check:</label>
-            <div id="tld-container">
-                <!-- TLDs will be added by JavaScript -->
+        <main>
+            <div class="card input-section">
+                <div class="input-group">
+                    <label for="domains"><i class="fas fa-globe"></i> Enter Domain Names (one per line)</label>
+                    <textarea id="domains" placeholder="example.com&#10;mywebsite&#10;business-name">google
+facebook
+amazon
+openai
+github</textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label><i class="fas fa-tags"></i> Select TLDs to Check</label>
+                    <div class="tlds-container">
+                        <div class="tld-option" data-tld=".com">
+                            <i class="fas fa-check"></i>.com
+                        </div>
+                        <div class="tld-option" data-tld=".net">
+                            <i class="fas fa-check"></i>.net
+                        </div>
+                        <div class="tld-option" data-tld=".org">
+                            <i class="fas fa-check"></i>.org
+                        </div>
+                        <div class="tld-option" data-tld=".co">
+                            <i class="fas fa-check"></i>.co
+                        </div>
+                        <div class="tld-option" data-tld=".io">
+                            <i class="fas fa-check"></i>.io
+                        </div>
+                        <div class="tld-option" data-tld=".ai">
+                            <i class="fas fa-check"></i>.ai
+                        </div>
+                        <div class="tld-option" data-tld=".us">
+                            <i class="fas fa-check"></i>.us
+                        </div>
+                        <div class="tld-option" data-tld=".in">
+                            <i class="fas fa-check"></i>.in
+                        </div>
+                        <div class="tld-option" data-tld=".co.in">
+                            <i class="fas fa-check"></i>.co.in
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="error" id="error-message"></div>
+                
+                <div class="btn-container">
+                    <button id="check-btn">
+                        <i class="fas fa-search"></i> Check Availability
+                    </button>
+                </div>
             </div>
-        </div>
+            
+            <div class="card results-section" id="results-section">
+                <div class="results-header">
+                    <h2><i class="fas fa-list"></i> Domain Availability Results</h2>
+                    <div class="stats">
+                        <div class="stat-box">
+                            <i class="fas fa-globe"></i>
+                            <span id="total-domains">0</span> Domains
+                        </div>
+                        <div class="stat-box" style="color: #4CAF50;">
+                            <i class="fas fa-check-circle"></i>
+                            <span id="available-count">0</span> Available
+                        </div>
+                        <div class="stat-box" style="color: #F44336;">
+                            <i class="fas fa-times-circle"></i>
+                            <span id="taken-count">0</span> Taken
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Checking domain availability. This may take a moment...</p>
+                </div>
+                
+                <div class="results-grid" id="results-grid"></div>
+            </div>
+        </main>
         
-        <button id="check-btn">Check Availability</button>
-        <div id="results"></div>
+        <footer class="footer">
+            <p>Powered by GoDaddy API | &copy; 2023 Domain Availability Checker</p>
+        </footer>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const domainsInput = document.getElementById('domains');
+            const tldOptions = document.querySelectorAll('.tld-option');
+            const checkBtn = document.getElementById('check-btn');
+            const resultsSection = document.getElementById('results-section');
+            const resultsGrid = document.getElementById('results-grid');
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('error-message');
+            const totalDomainsSpan = document.getElementById('total-domains');
+            const availableCountSpan = document.getElementById('available-count');
+            const takenCountSpan = document.getElementById('taken-count');
+            
+            // GoDaddy API credentials
+            const GODADDY_API_KEY = 'dLYuzkosMXb5_5w8r1GAw2ES94SwM4onm5a';
+            const GODADDY_API_SECRET = '5UDQgP3bPRc6EoijADcqic';
+            
+            // Selected TLDs
+            let selectedTlds = ['.com', '.net', '.org', '.co', '.io', '.ai', '.us', '.in', '.co.in'];
+            
+            // Toggle TLD selection
+            tldOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const tld = this.getAttribute('data-tld');
+                    
+                    if (selectedTlds.includes(tld)) {
+                        selectedTlds = selectedTlds.filter(item => item !== tld);
+                        this.classList.remove('selected');
+                    } else {
+                        selectedTlds.push(tld);
+                        this.classList.add('selected');
+                    }
+                });
+                
+                // Initialize as selected
+                option.classList.add('selected');
+            });
+            
+            // Check domain availability
+            checkBtn.addEventListener('click', async function() {
+                // Reset UI
+                errorMessage.style.display = 'none';
+                resultsGrid.innerHTML = '';
+                loading.style.display = 'block';
+                resultsSection.style.display = 'block';
+                
+                // Get domains from textarea
+                const domainsText = domainsInput.value.trim();
+                if (!domainsText) {
+                    showError('Please enter at least one domain name');
+                    loading.style.display = 'none';
+                    return;
+                }
+                
+                if (selectedTlds.length === 0) {
+                    showError('Please select at least one TLD to check');
+                    loading.style.display = 'none';
+                    return;
+                }
+                
+                // Parse domains
+                const domains = domainsText.split('\n')
+                    .map(domain => domain.trim())
+                    .filter(domain => domain.length > 0);
+                
+                // Create full domain list with TLDs
+                const fullDomains = [];
+                domains.forEach(domain => {
+                    selectedTlds.forEach(tld => {
+                        // Remove existing TLD if present
+                        const baseDomain = domain.replace(/\..*$/, '');
+                        fullDomains.push(baseDomain + tld);
+                    });
+                });
+                
+                // Update stats
+                totalDomainsSpan.textContent = fullDomains.length;
+                availableCountSpan.textContent = '0';
+                takenCountSpan.textContent = '0';
+                
+                // Disable button during processing
+                checkBtn.disabled = true;
+                checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+                
+                try {
+                    // Check domains in batches
+                    const batchSize = 10;
+                    const batches = [];
+                    
+                    for (let i = 0; i < fullDomains.length; i += batchSize) {
+                        batches.push(fullDomains.slice(i, i + batchSize));
+                    }
+                    
+                    for (const batch of batches) {
+                        await checkDomains(batch);
+                        // Small delay between batches to avoid rate limiting
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                    }
+                    
+                } catch (error) {
+                    showError(`Error: ${error.message}`);
+                } finally {
+                    loading.style.display = 'none';
+                    checkBtn.disabled = false;
+                    checkBtn.innerHTML = '<i class="fas fa-search"></i> Check Availability';
+                }
+            });
+            
+            // Check a batch of domains
+            async function checkDomains(domains) {
+                try {
+                    const response = await fetch('https://api.godaddy.com/v1/domains/available', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `sso-key ${GODADDY_API_KEY}:${GODADDY_API_SECRET}`
+                        },
+                        body: JSON.stringify(domains)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'API request failed');
+                    }
+                    
+                    const results = await response.json();
+                    
+                    // Process results
+                    results.domains.forEach(domainInfo => {
+                        addDomainResult(domainInfo);
+                    });
+                    
+                } catch (error) {
+                    throw new Error(`Failed to check domains: ${error.message}`);
+                }
+            }
+            
+            // Add domain result to the grid
+            function addDomainResult(domainInfo) {
+                const isAvailable = domainInfo.available;
+                
+                // Update counters
+                if (isAvailable) {
+                    availableCountSpan.textContent = parseInt(availableCountSpan.textContent) + 1;
+                } else {
+                    takenCountSpan.textContent = parseInt(takenCountSpan.textContent) + 1;
+                }
+                
+                // Create card
+                const card = document.createElement('div');
+                card.className = `domain-card ${isAvailable ? 'available' : 'taken'}`;
+                
+                card.innerHTML = `
+                    <div class="domain-name">
+                        <span>${domainInfo.domain}</span>
+                        <span class="domain-status">${isAvailable ? 'Available' : 'Taken'}</span>
+                    </div>
+                    <div class="domain-info">
+                        <div>
+                            <span>Status:</span>
+                            <span>${isAvailable ? 'Available for Registration' : 'Already Registered'}</span>
+                        </div>
+                        <div>
+                            <span>TLD:</span>
+                            <span>${domainInfo.domain.split('.').pop()}</span>
+                        </div>
+                        ${!isAvailable ? `
+                        <div>
+                            <span>Expires:</span>
+                            <span>${domainInfo.expires ? new Date(domainInfo.expires).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                resultsGrid.appendChild(card);
+            }
+            
+            // Show error message
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html>
