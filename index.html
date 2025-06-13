@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Availability Checker</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { display: flex; flex-direction: column; gap: 20px; }
+        textarea { width: 100%; height: 150px; padding: 10px; }
+        button { padding: 10px 20px; background: #0070f3; color: white; border: none; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        .available { color: green; }
+        .taken { color: red; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Domain Availability Checker</h1>
+        <textarea id="domains" placeholder="Enter domains (one per line)&#10;example:&#10;google&#10;facebook&#10;amazon"></textarea>
+        
+        <div>
+            <label>TLDs to check:</label>
+            <div id="tld-container">
+                <!-- TLDs will be added by JavaScript -->
+            </div>
+        </div>
+        
+        <button id="check-btn">Check Availability</button>
+        <div id="results"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
